@@ -1,15 +1,37 @@
-require 'json'
-require 'elasticsearch'
+require 'date'
+require 'multi_json'
+require 'elasticsearch/api'
 require 'pry'
 require 'fileutils'
+require 'faraday'
 
-FileUtils.cd("/Users/jakesorce/Desktop/website_widget_data-5-15-18") do
+class MySimpleClient
+  include Elasticsearch::API
+  CONNECTION = ::Faraday::Connection.new url: 'http://localhost:9200'
+  def perform_request(method, path, params, body)
+    puts "--> #{method.upcase} #{path} #{params} #{body}"
+    CONNECTION.run_request \
+      method.downcase.to_sym,
+      path,
+      (body ? MultiJson.dump(body) : nil),
+      'Content-Type' => 'application/json'
+  end
+end
+
+client = MySimpleClient.new
+user = `whoami`.delete("\n")
+
+FileUtils.cd("/Users/#{user}/Desktop/website_widget_data-5-15-18") do
   files = `ls`.split("\n")
-  files.each do |file|
-    parsed = JSON.parse(File.read(file))
-    # TODO: add ES header as first element in the array
+  # time = Time.now.utc.to_date.to_s
+  desired_keys = %w[event_text device timestamp session_id token]
+  files.each_with_index do |file, index|
+    exit if index == 1
     # Add the event data as the second element in the array
+    parsed = MultiJson.load(File.read(file))
     # Remove keys from the event data that we don't need in Elasticsearch
-    # Push data into elastic search
+    without_keys = parsed.first.reject { |k, v| !desired_keys.include?(k) || v.nil? || v.empty? }
+    # Push data into Elasticsearch
+    p client.index index: "webchat-#{without_keys['timestamp'].split(' ').first}", type: 'analytic-event', body: without_keys
   end
 end

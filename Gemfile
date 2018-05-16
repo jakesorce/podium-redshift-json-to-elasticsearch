@@ -1,6 +1,7 @@
 source "https://rubygems.org"
 
-gem 'json'
+gem 'multi_json'
 gem 'elasticsearch'
 gem 'pry'
+gem 'faraday'
 gem 'fileutils'

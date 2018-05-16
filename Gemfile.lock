@@ -13,7 +13,6 @@ GEM
     faraday (0.15.1)
       multipart-post (>= 1.2, < 3)
     fileutils (1.0.2)
-    json (2.1.0)
     method_source (0.9.0)
     multi_json (1.13.1)
     multipart-post (2.0.0)
@@ -26,8 +25,9 @@ PLATFORMS
 
 DEPENDENCIES
   elasticsearch
+  faraday
   fileutils
-  json
+  multi_json
   pry
 
 BUNDLED WITH
